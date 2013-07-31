@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
 
 namespace ChromelessWPFTest
 {
@@ -16,6 +18,8 @@ namespace ChromelessWPFTest
         private const float Gravity = .8f;
         private const float TerminalVelocity = 16f;
         private readonly Rectangle _area;
+        private bool _isDragging = false;
+        private Point _anchorPoint;
 
         public MainWindow()
         {
@@ -25,10 +29,12 @@ namespace ChromelessWPFTest
             _timer.Start();
 
             _area = Screen.PrimaryScreen.WorkingArea;
+            Mouse.AddMouseUpHandler(this, (sender, args) => ReleaseMouseCapture());
         }
 
         void _timer_Tick(object sender, EventArgs e)
         {
+            if (_isDragging) return;
             _yVel += Gravity;
             if (_yVel > TerminalVelocity)
             {
@@ -46,20 +52,40 @@ namespace ChromelessWPFTest
 
         }
 
-        private void Ellipse_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-
-        }
-
-        private void Ellipse_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-
-        }
-
         private void Ellipse_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _yVel = 1;
-            DragMove();
+            _isDragging = true;
+            Mouse.Capture(this, CaptureMode.SubTree);
+            _anchorPoint = PointToScreen(e.GetPosition(this));
+        }
+
+        private void Ellipse_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _isDragging = false;
+            ReleaseMouseCapture();
+            _yVel = 1f;
+            
+        }
+        
+        private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                Point currentPoint = PointToScreen(e.GetPosition(this));
+                Left = Left + currentPoint.X - _anchorPoint.X;
+                Top = Top + currentPoint.Y - _anchorPoint.Y;
+                _anchorPoint = currentPoint;
+            }
+        }
+
+        private void UIElement_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            ReleaseMouseCapture();
+        }
+
+        private void Circle_OnMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            ReleaseMouseCapture();
         }
     }
 }
