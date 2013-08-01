@@ -4,6 +4,8 @@
         AllowsTransparency="True"
         Title="MainWindow" Height="100" Width="100" WindowStyle="None" ResizeMode="NoResize" Background="Transparent" Foreground="Transparent" Topmost="True" MouseMove="MainWindow_OnMouseMove">
     <Grid Background="Transparent">
-        <Ellipse x:Name="circle" Fill="#2E0854FE" HorizontalAlignment="Left" Height="100" Stroke="Transparent" VerticalAlignment="Top" Width="100" MouseLeftButtonDown="Ellipse_MouseLeftButtonDown" MouseLeftButtonUp="Ellipse_OnMouseLeftButtonUp" PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp" MouseUp="Circle_OnMouseUp" />
+        <TextBlock Foreground="White" x:Name="Textout"></TextBlock>
+        <Ellipse x:Name="circle" Fill="#2E0854FE" HorizontalAlignment="Left" Height="100" Stroke="Transparent" VerticalAlignment="Top" Width="100" MouseLeftButtonDown="Circle_MouseLeftButtonDown" MouseLeftButtonUp="Circle_OnMouseLeftButtonUp">
+        </Ellipse>
     </Grid>
 </Window>

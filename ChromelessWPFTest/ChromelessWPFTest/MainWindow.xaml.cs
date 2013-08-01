@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
@@ -14,12 +15,16 @@ namespace ChromelessWPFTest
     public partial class MainWindow : Window
     {
         private readonly Timer _timer = new Timer();
-        private float _yVel = 1f;
-        private const float Gravity = .8f;
-        private const float TerminalVelocity = 16f;
+        private double _yVel = 1f;
+        private double _xVel = 1f;
+        private const double Friction = 1f;
+        private const double Gravity = .8f;
+        private const double AirMax = 16f;
+        private const double TerminalVelocity = 16f;
         private readonly Rectangle _area;
-        private bool _isDragging = false;
+        private bool _isDragging;
         private Point _anchorPoint;
+        private Vector _anchorDelta = new Vector(1f, 1f);
 
         public MainWindow()
         {
@@ -29,19 +34,30 @@ namespace ChromelessWPFTest
             _timer.Start();
 
             _area = Screen.PrimaryScreen.WorkingArea;
-            Mouse.AddMouseUpHandler(this, (sender, args) => ReleaseMouseCapture());
         }
 
         void _timer_Tick(object sender, EventArgs e)
         {
             if (_isDragging) return;
+            
             _yVel += Gravity;
             if (_yVel > TerminalVelocity)
             {
                 _yVel = TerminalVelocity;
             }
+
+            if (_xVel > 0)
+            {
+                _xVel -= Friction;
+            }
+
+            if (_xVel < 0)
+            {
+                _xVel += Friction;
+            }
             
             Top += _yVel;
+            Left += _xVel;
 
             if (Top + Height >= _area.Bottom)
             {
@@ -49,43 +65,57 @@ namespace ChromelessWPFTest
                 //bounce
                 _yVel = -_yVel;
             }
-
         }
 
-        private void Ellipse_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private int count = 0;
+        private Vector _anchorSum = new Vector();
+        private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
         {
+            if (_isDragging)
+            {
+                count++;
+                Point currentPoint = PointToScreen(e.GetPosition(this));
+                Left = Left + currentPoint.X - _anchorPoint.X;
+                Top = Top + currentPoint.Y - _anchorPoint.Y;
+                _anchorDelta = currentPoint - _anchorPoint;
+                _anchorPoint = currentPoint;
+                _anchorSum += _anchorDelta;
+            }
+        }
+
+        private void Circle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            count = 0;
+            Textout.Text = "";
             _isDragging = true;
             Mouse.Capture(this, CaptureMode.SubTree);
             _anchorPoint = PointToScreen(e.GetPosition(this));
         }
 
-        private void Ellipse_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Circle_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            var avDelta = _anchorSum/count;
+            Textout.Text = count.ToString();
             _isDragging = false;
             ReleaseMouseCapture();
-            _yVel = 1f;
-            
-        }
-        
-        private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
-        {
-            if (_isDragging)
-            {
-                Point currentPoint = PointToScreen(e.GetPosition(this));
-                Left = Left + currentPoint.X - _anchorPoint.X;
-                Top = Top + currentPoint.Y - _anchorPoint.Y;
-                _anchorPoint = currentPoint;
-            }
-        }
 
-        private void UIElement_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            ReleaseMouseCapture();
-        }
+            //if (double.IsInfinity(avDelta.Y))
+            //{
+            //    _yVel = 0;
+            //}
+            //else
+            //{
+            //    _yVel = (float)avDelta.Y;
+            //}
 
-        private void Circle_OnMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            ReleaseMouseCapture();
+            //if (double.IsInfinity(avDelta.X))
+            //{
+            //    _xVel = 0;
+            //}
+            //else
+            //{
+            //    _xVel = (float)avDelta.X;
+            //}
         }
     }
 }
