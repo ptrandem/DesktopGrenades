@@ -7,8 +7,8 @@
         <Grid.RenderTransform>
             <RotateTransform x:Name="Rotation" Angle="0" CenterX="50" CenterY="50"/>
         </Grid.RenderTransform>
-        <TextBlock Foreground="White" x:Name="Textout"></TextBlock>
-        <Rectangle Width="50" Height="50" Fill="White" RadiusX="8" RadiusY="8" Stroke="Transparent"></Rectangle>
+        <Rectangle Width="50" Height="50" Fill="Black" RadiusX="8" RadiusY="8" Stroke="Transparent"></Rectangle>
+        <TextBlock Foreground="White" x:Name="Textout" Width="50" Height="50" TextAlignment="Center">hi.</TextBlock>
         <Ellipse x:Name="circle" Fill="#2E0854FE" HorizontalAlignment="Left" Height="100" Stroke="Transparent" VerticalAlignment="Top" Width="100" MouseLeftButtonDown="Circle_MouseLeftButtonDown" MouseLeftButtonUp="Circle_OnMouseLeftButtonUp">
         </Ellipse>
         
