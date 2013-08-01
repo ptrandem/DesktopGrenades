@@ -33,6 +33,7 @@ namespace ChromelessWPFTest
         private World _world;
         private Body _circleBody;
         private Body _groundBody;
+        private Body _groundBody2;
 
         public MainWindow()
         {
@@ -56,20 +57,26 @@ namespace ChromelessWPFTest
             Top = (float) _area.Height/2 - (Height/2);
 
             // Create the circle fixture
-            _circleBody = BodyFactory.CreateCircle(_world, ConvertUnits.ToSimUnits(100 / 2f), 100f, circlePosition);
+            _circleBody = BodyFactory.CreateCircle(_world, ConvertUnits.ToSimUnits(100 / 2f), 10f, circlePosition);
             _circleBody.BodyType = BodyType.Dynamic;
-            _circleBody.ApplyTorque(25000f);
+            _circleBody.ApplyTorque(100f);
 
             // Create the ground fixture
             _groundBody = BodyFactory.CreateRectangle(_world, ConvertUnits.ToSimUnits(_area.Width * 2), ConvertUnits.ToSimUnits(1f), 1f, ConvertUnits.ToSimUnits(new Vector2(0, _area.Height-50)));
             _groundBody.IsStatic = true;
             _groundBody.Restitution = 0.8f;
             _groundBody.Friction = 0.5f;
+
+            // Create east wall
+            _groundBody2 = BodyFactory.CreateRectangle(_world, ConvertUnits.ToSimUnits(1f), ConvertUnits.ToSimUnits(_area.Height * 2), 1f, ConvertUnits.ToSimUnits(new Vector2(_area.Width-50, _area.Height)));
+            _groundBody2.IsStatic = true;
+            _groundBody2.Restitution = 0.8f;
+            _groundBody2.Friction = 0.5f;
         }
 
         void _timer_Tick(object sender, EventArgs e)
         {
-            _world.Step(.01f);
+            _world.Step(.025f);
             Top = ConvertUnits.ToDisplayUnits(_circleBody.Position.Y);
             Left = ConvertUnits.ToDisplayUnits(_circleBody.Position.X);
 
