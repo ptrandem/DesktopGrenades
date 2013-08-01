@@ -4,8 +4,13 @@
         AllowsTransparency="True"
         Title="MainWindow" Height="100" Width="100" WindowStyle="None" ResizeMode="NoResize" Background="Transparent" Foreground="Transparent" Topmost="True" MouseMove="MainWindow_OnMouseMove">
     <Grid Background="Transparent">
+        <Grid.RenderTransform>
+            <RotateTransform x:Name="Rotation" Angle="0" CenterX="50" CenterY="50"/>
+        </Grid.RenderTransform>
         <TextBlock Foreground="White" x:Name="Textout"></TextBlock>
+        <Rectangle Width="50" Height="50" Fill="White" RadiusX="8" RadiusY="8" Stroke="Transparent"></Rectangle>
         <Ellipse x:Name="circle" Fill="#2E0854FE" HorizontalAlignment="Left" Height="100" Stroke="Transparent" VerticalAlignment="Top" Width="100" MouseLeftButtonDown="Circle_MouseLeftButtonDown" MouseLeftButtonUp="Circle_OnMouseLeftButtonUp">
         </Ellipse>
+        
     </Grid>
 </Window>

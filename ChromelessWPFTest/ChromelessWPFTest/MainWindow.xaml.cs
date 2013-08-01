@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -59,26 +60,32 @@ namespace ChromelessWPFTest
             // Create the circle fixture
             _circleBody = BodyFactory.CreateCircle(_world, ConvertUnits.ToSimUnits(100 / 2f), 10f, circlePosition);
             _circleBody.BodyType = BodyType.Dynamic;
-            _circleBody.ApplyTorque(100f);
+            _circleBody.ApplyTorque(500f);
 
             // Create the ground fixture
-            _groundBody = BodyFactory.CreateRectangle(_world, ConvertUnits.ToSimUnits(_area.Width * 2), ConvertUnits.ToSimUnits(1f), 1f, ConvertUnits.ToSimUnits(new Vector2(0, _area.Height-50)));
+            _groundBody = BodyFactory.CreateRectangle(_world, ConvertUnits.ToSimUnits(_area.Width*4),
+                                                      ConvertUnits.ToSimUnits(1f), 1f,
+                                                      ConvertUnits.ToSimUnits(new Vector2(0, _area.Height - 50)));
             _groundBody.IsStatic = true;
             _groundBody.Restitution = 0.8f;
             _groundBody.Friction = 0.5f;
 
             // Create east wall
-            _groundBody2 = BodyFactory.CreateRectangle(_world, ConvertUnits.ToSimUnits(1f), ConvertUnits.ToSimUnits(_area.Height * 2), 1f, ConvertUnits.ToSimUnits(new Vector2(_area.Width-50, _area.Height)));
-            _groundBody2.IsStatic = true;
-            _groundBody2.Restitution = 0.8f;
-            _groundBody2.Friction = 0.5f;
+            //_groundBody2 = BodyFactory.CreateRectangle(_world, ConvertUnits.ToSimUnits(1f),
+            //                                           ConvertUnits.ToSimUnits(_area.Height*2), 1f,
+            //                                           ConvertUnits.ToSimUnits(new Vector2(_area.Width - 50,
+            //                                                                               _area.Height)));
+            //_groundBody2.IsStatic = true;
+            //_groundBody2.Restitution = 0.8f;
+            //_groundBody2.Friction = 0.5f;
         }
 
         void _timer_Tick(object sender, EventArgs e)
         {
             _world.Step(.025f);
-            Top = ConvertUnits.ToDisplayUnits(_circleBody.Position.Y);
-            Left = ConvertUnits.ToDisplayUnits(_circleBody.Position.X);
+            Top = ConvertUnits.ToDisplayUnits(_circleBody.Position.Y) - 50;
+            Left = ConvertUnits.ToDisplayUnits(_circleBody.Position.X) - 50;
+            Rotation.Angle = _circleBody.Rotation * 57.2957795;
 
             if (_isDragging) return;
             
@@ -113,24 +120,62 @@ namespace ChromelessWPFTest
         {
             if (_isDragging)
             {
-                Point currentPoint = PointToScreen(e.GetPosition(this));
-                Left = Left + currentPoint.X - _anchorPoint.X;
-                Top = Top + currentPoint.Y - _anchorPoint.Y;
-                _anchorDelta = currentPoint - _anchorPoint;
-                _anchorPoint = currentPoint;
+                var circlePoint = e.GetPosition(this);
+                var screenPoint = PointToScreen(circlePoint);
+                var position = GetVector2(screenPoint);
+                if (_mouseJoint != null)
+                {
+                    _mouseJoint.WorldAnchorB = ConvertUnits.ToSimUnits(position);
+                }
+                //Left = Left + currentPoint.X - _anchorPoint.X;
+                //Top = Top + currentPoint.Y - _anchorPoint.Y;
+                //_anchorDelta = currentPoint - _anchorPoint;
+                //_anchorPoint = currentPoint;
+                //_mouseJoint.
             }
         }
 
+        private Vector2 GetVector2(Point point)
+        {
+            return new Vector2((float)point.X, (float) point.Y);
+        }
+
+        private FixedMouseJoint _mouseJoint;
         private void Circle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Textout.Text = "";
             _isDragging = true;
             Mouse.Capture(this, CaptureMode.SubTree);
-            _anchorPoint = PointToScreen(e.GetPosition(this));
+            var circlePoint = e.GetPosition(this);
+            var screenPoint = PointToScreen(circlePoint);
+            var position = GetVector2(screenPoint);
+            
+
+            var fixture = _world.TestPoint(ConvertUnits.ToSimUnits(position));
+
+            var cpc = ConvertUnits.ToDisplayUnits(_circleBody.Position);
+
+            //Textout.Text = string.Format("cp:{0}\nsp:{1}\np:{2}\ncpc:{3}",
+            //                             circlePoint.ToString(),
+            //                             screenPoint.ToString(),
+            //                             position.ToString(),
+            //                             cpc.ToString());
+
+            if (fixture != null)
+            {
+                Body body = fixture.Body;
+                _mouseJoint = new FixedMouseJoint(body, ConvertUnits.ToSimUnits(position)) {MaxForce = 10000.0f*body.Mass};
+                _world.AddJoint(_mouseJoint);
+                body.Awake = true;
+            }
         }
 
         private void Circle_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            if (_mouseJoint != null)
+            {
+                _world.RemoveJoint(_mouseJoint);
+            }
+            //_mouseJoint = null;
             //Textout.Text = count.ToString();
             _isDragging = false;
             ReleaseMouseCapture();
