@@ -1,0 +1,25 @@
+<html>
+	<head>
+		
+	</head>
+	<body>
+		<input type="button" id="webClientButton">
+	</body>
+
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	  var socket = io.connect('http://localhost:8008');
+	  socket.on('news', function (data) {
+	    console.log(data);
+	    socket.emit('my other event', { my: 'data' });
+	  });
+
+	  $(document).ready(function(){
+	  	$("#webClientButton").on("click", function(){
+	  		socket.emit("checkin", {checkin:"web client"});
+	  	});
+	  });
+	</script>
+
+</html>

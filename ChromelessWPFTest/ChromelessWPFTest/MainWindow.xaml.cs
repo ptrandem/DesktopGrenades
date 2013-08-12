@@ -39,7 +39,7 @@ namespace ChromelessWPFTest
 
         public MainWindow()
         {
-            _timer.Interval = 10;
+            _timer.Interval = 1;
             _timer.Tick += _timer_Tick;
             InitializeComponent();
             _timer.Start();
@@ -96,15 +96,12 @@ namespace ChromelessWPFTest
                 var circlePoint = e.GetPosition(this);
                 var screenPoint = PointToScreen(circlePoint);
                 var position = GetVector2(screenPoint);
+
+                Debug.Print("dragging:" + screenPoint + "\t" + position);
                 if (_mouseJoint != null)
                 {
                     _mouseJoint.WorldAnchorB = ConvertUnits.ToSimUnits(position);
                 }
-                //Left = Left + currentPoint.X - _anchorPoint.X;
-                //Top = Top + currentPoint.Y - _anchorPoint.Y;
-                //_anchorDelta = currentPoint - _anchorPoint;
-                //_anchorPoint = currentPoint;
-                //_mouseJoint.
             }
         }
 
@@ -116,26 +113,25 @@ namespace ChromelessWPFTest
         private FixedMouseJoint _mouseJoint;
         private void Circle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            Debug.Print("Circle_MouseLeftButtonDown");
+            if (_isDragging) return;
+            Debug.Print("Circle_MouseLeftButtonDown - drag start");
+            //Mouse.Capture(this, CaptureMode.SubTree);
+            //this.CaptureMouse();
             _isDragging = true;
-            Mouse.Capture(this, CaptureMode.SubTree);
             var circlePoint = e.GetPosition(this);
             var screenPoint = PointToScreen(circlePoint);
-            var position = GetVector2(screenPoint);
+            var screenPosition = GetVector2(screenPoint);
+            var worldPosition = ConvertUnits.ToSimUnits(screenPosition);
+
             Textout.Text = "down";
 
-            var fixture = _world.TestPoint(ConvertUnits.ToSimUnits(position));
-
-            //var cpc = ConvertUnits.ToDisplayUnits(_circleBody.Position);
-            //Textout.Text = string.Format("cp:{0}\nsp:{1}\np:{2}\ncpc:{3}",
-            //                             circlePoint.ToString(),
-            //                             screenPoint.ToString(),
-            //                             position.ToString(),
-            //                             cpc.ToString());
+            var fixture = _world.TestPoint(worldPosition);
 
             if (fixture != null)
             {
                 Body body = fixture.Body;
-                _mouseJoint = new FixedMouseJoint(body, ConvertUnits.ToSimUnits(position)) {MaxForce = 10000.0f*body.Mass};
+                _mouseJoint = new FixedMouseJoint(body, worldPosition) { MaxForce = 10000.0f * body.Mass };
                 _world.AddJoint(_mouseJoint);
                 body.Awake = true;
             }
@@ -143,18 +139,27 @@ namespace ChromelessWPFTest
 
         private void Circle_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            Textout.Text = "up";
-            //if (_mouseJoint != null)
-            //{
-            //    _world.RemoveJoint(_mouseJoint);
-            //}
-            //_world.RemoveJoint();
-            _world.JointList.Where(j => j.JointType == JointType.FixedMouse).ToList().ForEach(_world.RemoveJoint);
-
-            //_mouseJoint = null;
-            //Textout.Text = count.ToString();
+            Debug.Print("Circle_OnMouseLeftButtonUp");
+            if (!_isDragging) return;
+            Debug.Print("Circle_OnMouseLeftButtonUp - drag stopping");
             _isDragging = false;
+            Textout.Text = "up";
+            _world.JointList.Where(j => j.JointType == JointType.FixedMouse).ToList().ForEach(_world.RemoveJoint);
             ReleaseMouseCapture();
+        }
+
+        private void circle_LostMouseCapture(object sender, MouseEventArgs e)
+        {
+            Debug.Print("circle_LostMouseCapture");
+
+            if (!_isDragging) return;
+
+            Debug.Print("circle_LostMouseCapture - drag stopping");
+
+            _isDragging = false;
+            
+            Textout.Text = "up";
+            _world.JointList.Where(j => j.JointType == JointType.FixedMouse).ToList().ForEach(_world.RemoveJoint);
         }
     }
 }
