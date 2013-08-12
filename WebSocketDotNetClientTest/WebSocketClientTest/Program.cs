@@ -7,7 +7,7 @@ namespace WebSocketClientTest
 {
     class Program
     {
-        
+
         static void Main(string[] args)
         {
             Execute();
@@ -19,11 +19,11 @@ namespace WebSocketClientTest
             Client socket;
             Console.WriteLine("Starting TestSocketIOClient Example...");
 
-            socket = new Client("http://localhost:8008/"); // url to nodejs 
+            socket = new Client("http://localhost:8008/"); // url to nodejs server
             //socket.Opened += socket_Opened;
             //socket.Message += SocketMessage;
             //socket.SocketConnectionClosed += SocketConnectionClosed;
-            //socket.Error += SocketError;
+            socket.Error += SocketError;
 
             // register for 'connect' event with io server
             socket.On("connect", (fn) =>
@@ -31,26 +31,43 @@ namespace WebSocketClientTest
                 Console.WriteLine("\r\nConnected event...\r\n");
             });
 
-            // register for 'update' events - message is a json 'Part' object
             socket.On("news", (data) =>
             {
                 Console.WriteLine("  raw message:      {0}", data.RawMessage);
                 Console.WriteLine("  string message:   {0}", data.MessageText);
             });
 
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\r\nPress 'c' to execute checkin event \r\n\t(view socket.io server console window to verify).\r\nPress 'x' to exit.");
+            Console.ResetColor();
+
             // make the socket.io connection
             socket.Connect();
-            socket.Emit("my other event", new {data = "some test payload"});
+
+            // example test event
+            socket.Emit("my other event", new { data = "some test payload" });
             var running = true;
+
 
             while (running)
             {
-                var input = Console.ReadLine();
-                if (input == "c")
+                var input = Console.ReadKey(true);
+                if (input.Key == ConsoleKey.C)
                 {
-                    socket.Emit("checkin", new {checkin = ".net client"});
+                    if (socket.IsConnected)
+                    {
+                        socket.Emit("checkin", new {checkin = ".net client"});
+                        Console.WriteLine("Checkin sent.");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Not connected.");
+                        Console.ResetColor();
+                    }
+                    
                 }
-                else if (input == "x")
+                else if (input.Key == ConsoleKey.X)
                 {
                     running = false;
                 }
@@ -60,22 +77,21 @@ namespace WebSocketClientTest
 
         static void SocketError(object sender, ErrorEventArgs e)
         {
-            
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Socket error: " + e.Message);
+            Console.ResetColor();
         }
 
         private static void SocketConnectionClosed(object sender, EventArgs e)
         {
-
         }
 
         private static void SocketMessage(object sender, MessageEventArgs e)
         {
-
         }
 
         static void socket_Opened(object sender, EventArgs e)
         {
         }
-       
     }
 }
