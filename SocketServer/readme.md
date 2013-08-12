@@ -10,4 +10,5 @@ To start the web client, navigate to:
   
 Press the button or the enter key and watch the server console to verify checkins.
 
-To test the .Net console client, spin that solution up, press F5 and follow the client's on-screen directions.
+To test the .Net console client, open up the `WebSocketDotNetClientTest` solution, press F5 and follow the client's on-screen directions (press `c` to xmit and `x` to quit).
+
