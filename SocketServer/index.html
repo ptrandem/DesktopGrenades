@@ -12,7 +12,6 @@
 		var socket = io.connect('/');
 		socket.on('news', function (data) {
 			console.log(data);
-			socket.emit('my other event', { my: 'data' });
 		});
 
 		var $webClientButton = undefined;
@@ -20,12 +19,15 @@
 		$(document).ready(function() {
 			$webClientButton = $("#webClientButton");
 			$webClientButton.on("click", function(){
-				socket.emit("checkin", {checkin:"web client"});
+				socket.emit("checkin", {checkin:"frank's client"});
 			});
 
 			$(document).keypress(function (e) {
 				if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
 					$webClientButton.click();
+					return false;
+				} else if ((e.which && e.which == 120) || (e.keyCode && e.keyCode == 120)) {
+					socket.disconnect();
 					return false;
 				} else {
 					return true;

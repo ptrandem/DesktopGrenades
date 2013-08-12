@@ -1,11 +1,29 @@
 var PORT_NUMBER = 8008;
-var app = require('http').createServer(handler)
-  , io = require('socket.io').listen(app)
-  , fs = require('fs')
+
+var app = require('http').createServer(handler),
+   io = require('socket.io').listen(app),
+   fs = require('fs'),
+   os = require('os'),
+   util = require('util');
+
+io.set('log level', 1); // reduce logging
 
 app.listen(PORT_NUMBER);
 console.log("Listening on port " + PORT_NUMBER + ".");
 console.log("To test the web-based socket.io client, navigate to http://localhost:" + PORT_NUMBER + "/index.html");
+
+console.log("This server may also be available at the following IP Addresses:");
+var interfaces =os.networkInterfaces();
+for (var dev in interfaces) {
+  var alias=0;
+  interfaces[dev].forEach(function(details){
+    if (details.family=='IPv4') {
+      console.log(details.address + ":" + PORT_NUMBER + "\t (" + dev+ ((alias) ? (":"+alias) : '') + ")");
+      ++alias;
+    }
+  });
+}
+
 
 function handler (req, res) {
   fs.readFile(__dirname + '/index.html',
@@ -20,13 +38,20 @@ function handler (req, res) {
   });
 }
 
+var currentX = 0, currentY = 0;
+
 io.sockets.on('connection', function (socket) {
-  
+  console.log("\r\n");
+  console.log("\r\n");
   socket.emit('news', { hello: 'world' });
   socket.on('my other event', function (data) {
     console.log(data);
   });
   socket.on('checkin', function(data){
-  	console.log("check in from " + data.checkin + " (client: " + socket.id + ")");
+    console.log("check in from " + data.checkin + " (client: " + socket.id + ")");
+    socket.emit('news', {status: "success"});
+  });
+  socket.on('positionChange', function(data){
+    socket.broadcast.emit('acceptPosition', {x: data.x, y: data.y});
   });
 });
