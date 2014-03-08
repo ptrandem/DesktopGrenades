@@ -134,7 +134,7 @@ namespace ChromelessWPFTest
         private FixedMouseJoint _mouseJoint;
         private void Circle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Debug.Print("Circle_MouseLeftButtonDown");
+            //Debug.Print("Circle_MouseLeftButtonDown");
             if (_isDragging) return;
             Debug.Print("Circle_MouseLeftButtonDown - drag start");
             //Mouse.Capture(this, CaptureMode.SubTree);
