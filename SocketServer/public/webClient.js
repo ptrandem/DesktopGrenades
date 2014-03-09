@@ -2,6 +2,9 @@ var WebClient = function()
 {
 	this.$inputBox = $('.js-message-input');
 	this.$sendButton = $('.js-send-message');
+	this.$clientList = $('.js-client-list');
+	this.$messageList = $('.js-messages');
+
 	this.socket = io.connect('http://localhost');
 
 	this.bindEvents();
@@ -18,12 +21,46 @@ proto.bindEvents = function()
 
 proto.handleServerData = function(data)
 {
-	console.log(data);
+	switch(data.event)
+	{
+		case "AvailableClients" : this.listAvailableClients(data.data); break;
+		case "ClientId" : this.setClientId(data.data); break;
+		case "Message" : this.handleMessage(data.data); break;
+		default : console.log("error handling server for event: "+data.event);
+	}
+}
+
+proto.handleMessage = function(message)
+{
+	this.$messageList.append("<li>"+message.client+": " +message.text+"</li>");
+}
+
+proto.setClientId = function(id)
+{
+	$('.js-welcome').text("Welcome "+id+"!");
+}
+
+proto.sendServerData = function(event, data)
+{
+	this.socket.emit('clientData', { event: event, data: data  });
+}
+
+proto.listAvailableClients = function(clients)
+{
+	this.$clientList.html("");
+
+	clients.forEach(function(client)
+	{
+		this.$clientList.append("<option value='"+client.id+"'>"+client.id+"</option>");
+	}.bind(this));
 }
 
 proto.buttonClick = function(e)
 {
-	this.socket.emit('clientData',this.$inputBox.val());
+	this.sendServerData('Message',{
+		text: this.$inputBox.val(),
+		clientId: this.$clientList.val()
+	});
 }
 
 

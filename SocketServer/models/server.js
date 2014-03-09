@@ -15,30 +15,58 @@ proto.constructor = Server;
 
 proto.newConnection = function(socket)
 {
-	var client = new Client(socket);
+	var client = new Client(socket.id);
 
-	client.socket.on('clientData', function (data) {
+	socket.on('clientData', function (data) {
 		this.handleClientData(client, data);
 	}.bind(this));
 
 	this.clients.push(client);
-	
-	this.sendGlobalData("New user has joined!");
+	this.sendClientData(client, "ClientId", client.id);
+	this.sendGlobalData("AvailableClients", this.clients);
 
 }
 
 proto.handleClientData = function(client, data)
 {
-	console.log(data);
+	switch(data.event)
+	{
+		case "Message" : this.handleMessage(client, data.data); break;
+		default : console.log("error handling server for event: "+data.event);
+	}
 }
 
-proto.sendGlobalData = function(data)
+proto.handleMessage = function(client, message)
+{
+	var destinationClient = this.findClientById(message.clientId);
+	if(destinationClient)
+	{
+		this.sendClientData(destinationClient,"Message", {client:client.id, text:message.text});
+	}
+}
+
+proto.findClientById = function(id)
+{
+	var i;
+	for(i = 0; i < this.clients.length; i++)
+	{
+		if(this.clients[i].id == id) return this.clients[i];
+	}
+	return null;
+}
+
+proto.sendClientData = function(client, event, data)
+{
+	io.sockets.socket(client.id).emit("serverData", {event: event, data: data})
+}
+
+proto.sendGlobalData = function(event, data)
 {
 	var i;
 	for(i = 0; i < this.clients.length; i++)
 	{
 		var client = this.clients[i];
-		client.socket.emit("serverData", data);
+		io.sockets.socket(client.id).emit("serverData", {event: event, data: data})
 	}
 }
 

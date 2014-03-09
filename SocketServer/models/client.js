@@ -1,7 +1,6 @@
-var Client = function(socket)
+var Client = function(id)
 {
-	this.id = socket.id;
-	this.socket = socket;
+	this.id = id;
 }
 
 var proto = Client.prototype;
